@@ -9,7 +9,6 @@ from collections import deque
 import time
 import sqlite3
 import os
-import random
 import altair as alt
 
 # Constants
@@ -235,10 +234,6 @@ def main():
     init_db()
     load_liquidations_from_db()
     
-    # Initialize theme in session state
-    if 'theme' not in st.session_state:
-        st.session_state.theme = 'light'
-    
     # Sidebar with branding
     with st.sidebar:
         st.image("static/logo.svg", width=200)
@@ -255,43 +250,6 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
-        
-        # Theme toggle
-        if st.button(f"{'🌙 Dark' if st.session_state.theme == 'light' else '☀️ Light'} Mode"):
-            st.session_state.theme = 'dark' if st.session_state.theme == 'light' else 'light'
-            st.rerun()
-    
-    # Apply theme CSS
-    if st.session_state.theme == 'dark':
-        st.markdown("""
-        <style>
-        body { background-color: #121212; color: #ffffff; }
-        .stApp { background-color: #121212; }
-        .css-1d391kg { background-color: #1e1e1e; }
-        .stTextInput, .stNumberInput, .stSelectbox { background-color: #2d2d2d; color: #ffffff; }
-        .stDataFrame { background-color: #1e1e1e; color: #ffffff; }
-        .stMarkdown { color: #ffffff; }
-        .stTitle { color: #ffffff; }
-        .stHeader { color: #ffffff; }
-        .stSubheader { color: #ffffff; }
-        .stMetric { color: #ffffff; }
-        </style>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown("""
-        <style>
-        body { background-color: #ffffff; color: #000000; }
-        .stApp { background-color: #ffffff; }
-        .stMarkdown { color: #000000; }
-        .stTitle { color: #000000; }
-        .stHeader { color: #000000; }
-        .stSubheader { color: #000000; }
-        .stMetric { color: #000000; }
-        .stDataFrame { color: #000000; }
-        .stTextInput, .stNumberInput, .stSelectbox { background-color: #ffffff; color: #000000; }
-        .css-1d391kg { background-color: #f0f0f0; }
-        </style>
-        """, unsafe_allow_html=True)
 
     st.title("📊 Real-time Liquidation Dashboard")
     st.markdown("---")
@@ -335,9 +293,8 @@ def main():
                 # Create DataFrame for Altair
                 chart_df = chart_data.reset_index()
                 chart_df.columns = ['Symbol', 'Value']
-                # Generate random colors for each bar
-                colors = [f"#{random.randint(0, 0xFFFFFF):06x}" for _ in range(len(chart_df))]
-                chart_df['Color'] = colors
+                # Generate consistent colors for each symbol based on hash
+                chart_df['Color'] = chart_df['Symbol'].apply(lambda s: f"#{hash(s) % 0x1000000:06x}")
                 
                 # Create Altair chart
                 chart = alt.Chart(chart_df).mark_bar().encode(
