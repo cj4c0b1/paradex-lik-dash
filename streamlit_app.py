@@ -237,6 +237,14 @@ def main():
     # Sidebar with branding
     with st.sidebar:
         st.image("static/logo.svg", width=200)
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 10px;">
+            <a href="https://github.com/cj4c0b1/aster-lik-dash" target="_blank" style="text-decoration: none;">
+                <img src="static/github-icon.svg" alt="GitHub" width="24" style="vertical-align: middle; margin-right: 8px;">
+                View on GitHub
+            </a>
+        </div>
+        """, unsafe_allow_html=True)
         st.markdown("### Powered by [Asterdex.com](https://www.asterdex.com/en/referral/183633)")
         st.markdown("""
         <div style="background-color: #1E1E1E; padding: 15px; border-radius: 10px; margin-top: 20px;">
