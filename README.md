@@ -26,7 +26,7 @@ A real-time dashboard for monitoring liquidations on the Aster Dex exchange. Thi
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/aster-lik-dash.git
+   git clone https://github.com/cj4c0b1/aster-lik-dash.git
    cd aster-lik-dash
    ```
 
@@ -90,8 +90,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Data provided by [Aster Dex](https://www.asterdex.com/)
 - Icons from [Font Awesome](https://fontawesome.com/)
 
+## 💰 Support the Project
+
+If you find this project useful, consider supporting it:
+
+- **Aster Dex Referral**: Start trading on Aster Dex with [my referral link](https://www.asterdex.com/en/referral/183633) and receive 5% back from all fees.
+
+- **Donations**: EVM Wallet: `0x7B267EcEc11a07CA2a782E4b8a51558a70449e7c`
+
 ## 📧 Contact
 
-Cicero Jacobi - [@yourtwitter](https://twitter.com/yourtwitter)
+j4c0b1 - [cj4c0b1](https://github.com/cj4c0b1)
 
-Project Link: [https://github.com/yourusername/aster-lik-dash](https://github.com/yourusername/aster-lik-dash)
+Project Link: [https://github.com/cj4c0b1/aster-lik-dash](https://github.com/cj4c0b1/aster-lik-dash)
