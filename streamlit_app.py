@@ -2,7 +2,7 @@ import asyncio
 import json
 import pandas as pd
 import streamlit as st
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import websockets
 import hashlib
 from collections import deque
@@ -41,7 +41,7 @@ def load_liquidations_from_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     # Load last 1 hour of data or up to MAX_DATA_POINTS
-    one_hour_ago = (datetime.utcnow() - timedelta(hours=1)).isoformat()
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     cursor.execute("""
         SELECT id, timestamp, symbol, side, price, quantity, value, time
         FROM liquidations
@@ -84,7 +84,7 @@ def cleanup_old_liquidations():
     """Remove liquidations older than 1 hour from database"""
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-    one_hour_ago = (datetime.utcnow() - timedelta(hours=1)).isoformat()
+    one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     cursor.execute("DELETE FROM liquidations WHERE timestamp < ?", (one_hour_ago,))
     conn.commit()
     conn.close()
