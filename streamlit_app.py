@@ -143,7 +143,7 @@ websocket_thread.start()
 def main():
     # Sidebar with branding
     with st.sidebar:
-# st.image("static/logo.svg", width=200)  # Commented out due to missing static/logo.svg
+        st.image("static/logo.svg", width=200)
         st.markdown("### Powered by [Asterdex.com](https://www.asterdex.com/en/referral/183633)")
         st.markdown("""
         <div style="background-color: #1E1E1E; padding: 15px; border-radius: 10px; margin-top: 20px;">
