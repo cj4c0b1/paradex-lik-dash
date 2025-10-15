@@ -32,7 +32,8 @@ def init_db():
             price REAL NOT NULL,
             quantity REAL NOT NULL,
             value REAL NOT NULL,
-            time TEXT NOT NULL
+            time TEXT NOT NULL,
+            UNIQUE(timestamp, symbol, side, value)
         )
     """)
     conn.commit()
@@ -74,7 +75,7 @@ def save_liquidation_to_db(liquidation):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("""
-        INSERT OR REPLACE INTO liquidations (id, timestamp, symbol, side, price, quantity, value, time)
+        INSERT OR IGNORE INTO liquidations (id, timestamp, symbol, side, price, quantity, value, time)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """, (liquidation['id'], liquidation['timestamp'].isoformat(), liquidation['symbol'],
           liquidation['side'], liquidation['price'], liquidation['quantity'],
