@@ -1,5 +1,8 @@
 # 📊 Aster Dex Liquidation Dashboard
 
+<img width="1597" height="1194" alt="image" src="https://github.com/user-attachments/assets/27a7b5ed-bcb2-4cae-97e2-cb89b343bd2d" />
+
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B?logo=streamlit&logoColor=white)](https://streamlit.io/)
