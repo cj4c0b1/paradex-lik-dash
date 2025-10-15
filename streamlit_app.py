@@ -58,12 +58,18 @@ def load_liquidations_from_db():
     # Load last 1 hour of data or up to MAX_DATA_POINTS
     one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     cursor.execute("""
-        SELECT DISTINCT id, timestamp, symbol, side, price, quantity, value, time
+        SELECT id, timestamp, symbol, side, price, quantity, value, time
         FROM liquidations
         WHERE timestamp >= ?
+        AND rowid IN (
+            SELECT MIN(rowid)
+            FROM liquidations
+            WHERE timestamp >= ?
+            GROUP BY timestamp, symbol, side, value
+        )
         ORDER BY timestamp DESC
         LIMIT ?
-    """, (one_hour_ago, MAX_DATA_POINTS))
+    """, (one_hour_ago, one_hour_ago, MAX_DATA_POINTS))
     rows = cursor.fetchall()
     conn.close()
     
