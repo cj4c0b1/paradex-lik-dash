@@ -10,7 +10,6 @@ import time
 import sqlite3
 import os
 import random
-import plotly.graph_objects as go
 
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
@@ -291,16 +290,9 @@ def main():
             with chart_placeholder.container():
                 st.subheader("Liquidation Volume by Symbol (Last 100)")
                 chart_data = df.tail(100).groupby('symbol')['value'].sum().sort_values(ascending=False)
-                
-                # Generate random colors for each symbol
-                symbols = chart_data.index
-                colors = [f'rgb({random.randint(0,255)},{random.randint(0,255)},{random.randint(0,255)})' for _ in symbols]
-                
-                # Create Plotly figure
-                fig = go.Figure(data=[go.Bar(x=symbols, y=chart_data.values, marker=dict(color=colors))])
-                fig.update_layout(title="Liquidation Volume by Symbol", xaxis_title="Symbol", yaxis_title="Volume")
-                
-                st.plotly_chart(fig)
+                # Generate random colors for each bar
+                colors = [f"#{random.randint(0, 0xFFFFFF):06x}" for _ in range(len(chart_data))]
+                st.bar_chart(chart_data, color=colors)
         
         # Display latest liquidations
         with table_placeholder.container():
