@@ -50,7 +50,13 @@ A real-time dashboard for monitoring liquidations on the Aster Dex exchange. Thi
 streamlit run streamlit_app.py
 ```
 
-Then open your browser and navigate to `http://localhost:8501`.
+## 🌐 Live Demo
+
+You can also run the application directly from the Streamlit gallery:
+
+[https://asterlik.streamlit.app/](https://asterlik.streamlit.app/)
+
+This allows you to interact with the dashboard without setting up the local environment.
 
 ## 🛠️ Project Structure
 
