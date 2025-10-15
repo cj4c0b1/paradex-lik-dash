@@ -10,7 +10,8 @@ import time
 
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
-ASTER_WS_URL = "wss://fstream.asterdex.com/stream?streams=!forceOrder@arr"
+ASTER_WS_URL = "wss://fstream.asterdex.com/ws"
+# binance wss ASTER_WS_URL = "wss://fstream.binance.com/ws"
 
 # Global storage for liquidations
 liquidations = deque(maxlen=MAX_DATA_POINTS)
@@ -109,10 +110,18 @@ def calculate_stats(df):
 
 async def aster_websocket():
     """Connect to Aster Dex websocket and process liquidations"""
+    subscribe_msg = {
+        "method": "SUBSCRIBE",
+        "params": ["!forceOrder@arr"],
+        "id": 1
+    }
     while True:
         try:
             async with websockets.connect(ASTER_WS_URL) as websocket:
                 print("Connected to Aster Dex WebSocket")
+                # Send subscription message after connecting
+                await websocket.send(json.dumps(subscribe_msg))
+                print("Subscription message sent for !forceOrder@arr")
                 while True:
                     try:
                         message = await websocket.recv()
