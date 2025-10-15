@@ -37,6 +37,16 @@ def init_db():
         )
     """)
     conn.commit()
+    
+    # Remove duplicates, keeping only the first occurrence
+    cursor.execute("""
+        DELETE FROM liquidations 
+        WHERE rowid NOT IN (
+            SELECT MIN(rowid) FROM liquidations 
+            GROUP BY timestamp, symbol, side, value
+        )
+    """)
+    conn.commit()
     conn.close()
 
 def load_liquidations_from_db():
