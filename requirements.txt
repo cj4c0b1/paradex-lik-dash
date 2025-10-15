@@ -1,6 +1,2 @@
 streamlit
 pandas
-numpy
-requests
-sqlite3
-redis
