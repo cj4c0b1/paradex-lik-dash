@@ -1,3 +1,6 @@
-streamlit==1.39.0
-pandas==2.2.3
-websockets==13.1
+streamlit
+pandas
+numpy
+requests
+sqlite3
+redis
