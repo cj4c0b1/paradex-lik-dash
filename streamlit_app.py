@@ -336,15 +336,15 @@ def main():
                 display_df['Price'] = display_df['Price'].apply(lambda x: f"${x:,.2f}")
                 display_df['Quantity'] = display_df['Quantity'].apply(lambda x: f"{x:,.4f}")
                 
-                # Apply conditional styling based on 'Side'
-                def style_side(val):
-                    if val == 'SELL':
-                        return 'background-color: #ffcccc'  # Light red
-                    elif val == 'BUY':
-                        return 'background-color: #ccffcc'  # Light green
+                # Style the Side column with colors
+                def color_side(val):
+                    if val.upper() == 'SELL':
+                        return 'color: red'
+                    elif val.upper() == 'BUY':
+                        return 'color: green'
                     return ''
                 
-                styled_df = display_df.style.applymap(style_side, subset=['Side'])
+                styled_df = display_df.style.applymap(color_side, subset=['Side'])
                 st.dataframe(styled_df, width='stretch', hide_index=True)
             else:
                 st.info("Waiting for liquidation data...")
