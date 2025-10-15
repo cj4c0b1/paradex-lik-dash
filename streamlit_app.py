@@ -270,6 +270,11 @@ def main():
         .css-1d391kg { background-color: #1e1e1e; }
         .stTextInput, .stNumberInput, .stSelectbox { background-color: #2d2d2d; color: #ffffff; }
         .stDataFrame { background-color: #1e1e1e; color: #ffffff; }
+        .stMarkdown { color: #ffffff; }
+        .stTitle { color: #ffffff; }
+        .stHeader { color: #ffffff; }
+        .stSubheader { color: #ffffff; }
+        .stMetric { color: #ffffff; }
         </style>
         """, unsafe_allow_html=True)
     else:
@@ -277,6 +282,14 @@ def main():
         <style>
         body { background-color: #ffffff; color: #000000; }
         .stApp { background-color: #ffffff; }
+        .stMarkdown { color: #000000; }
+        .stTitle { color: #000000; }
+        .stHeader { color: #000000; }
+        .stSubheader { color: #000000; }
+        .stMetric { color: #000000; }
+        .stDataFrame { color: #000000; }
+        .stTextInput, .stNumberInput, .stSelectbox { background-color: #ffffff; color: #000000; }
+        .css-1d391kg { background-color: #f0f0f0; }
         </style>
         """, unsafe_allow_html=True)
 
