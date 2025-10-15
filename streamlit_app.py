@@ -19,6 +19,9 @@ ASTER_WS_URL = "wss://fstream.asterdex.com/ws"
 
 DB_PATH = "liquidations.db"
 
+# Global storage for liquidations
+liquidations = deque(maxlen=MAX_DATA_POINTS)
+
 def init_db():
     """Initialize SQLite database and create table if not exists"""
     conn = sqlite3.connect(DB_PATH)
@@ -78,6 +81,8 @@ def load_liquidations_from_db():
             'value': row[6],
             'time': row[7]
         })
+    # Deduplicate the loaded data
+    data = deduplicate_liquidations(data)
     liquidations.extend(data)
 
 def save_liquidation_to_db(liquidation):
@@ -102,8 +107,16 @@ def cleanup_old_liquidations():
     conn.commit()
     conn.close()
 
-# Global storage for liquidations
-liquidations = deque(maxlen=MAX_DATA_POINTS)
+def deduplicate_liquidations(liquidations_list):
+    """Remove duplicates from liquidations list based on timestamp, symbol, side, value"""
+    seen = set()
+    unique_list = []
+    for liq in liquidations_list:
+        key = (liq['timestamp'], liq['symbol'], liq['side'], liq['value'])
+        if key not in seen:
+            seen.add(key)
+            unique_list.append(liq)
+    return unique_list
 
 # Streamlit page config
 st.set_page_config(
@@ -144,11 +157,15 @@ def process_liquidation(data):
             'time': timestamp.strftime('%H:%M:%S')
         }
         
-        # Add to memory
-        liquidations.append(liquidation)
-        
-        # Save to database
-        save_liquidation_to_db(liquidation)
+        # Check if already exists in memory
+        key = (liquidation['timestamp'], liquidation['symbol'], liquidation['side'], liquidation['value'])
+        existing_keys = {(liq['timestamp'], liq['symbol'], liq['side'], liq['value']) for liq in liquidations}
+        if key not in existing_keys:
+            # Add to memory
+            liquidations.append(liquidation)
+            
+            # Save to database
+            save_liquidation_to_db(liquidation)
         
     except Exception as e:
         print(f"Error processing liquidation: {e}")
