@@ -217,6 +217,7 @@ def calculate_stats(df):
         'last_updated': now.strftime('%Y-%m-%d %H:%M:%S')
     }
 
+@st.cache_resource
 async def aster_websocket():
     """Connect to Aster Dex websocket and process liquidations"""
     subscribe_msg = {
