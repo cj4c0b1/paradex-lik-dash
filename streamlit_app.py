@@ -15,7 +15,6 @@ import threading
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
 ASTER_WS_URL = "wss://fstream.asterdex.com/ws"
-#ASTER_WS_URL = "wss://fstream.binance.com/ws"
 
 DB_PATH = "liquidations.db"
 
@@ -59,7 +58,7 @@ def load_liquidations_from_db():
     # Load last 1 hour of data or up to MAX_DATA_POINTS
     one_hour_ago = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
     cursor.execute("""
-        SELECT id, timestamp, symbol, side, price, quantity, value, time
+        SELECT DISTINCT id, timestamp, symbol, side, price, quantity, value, time
         FROM liquidations
         WHERE timestamp >= ?
         ORDER BY timestamp DESC
@@ -217,7 +216,6 @@ def calculate_stats(df):
         'last_updated': now.strftime('%Y-%m-%d %H:%M:%S')
     }
 
-@st.cache_resource
 async def aster_websocket():
     """Connect to Aster Dex websocket and process liquidations"""
     subscribe_msg = {
