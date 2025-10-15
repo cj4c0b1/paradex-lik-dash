@@ -189,6 +189,10 @@ def get_latest_liquidations():
         else:
             df['timestamp'] = df['timestamp'].dt.tz_convert('UTC')
     
+    # Drop duplicates based on the unique combination of fields
+    if not df.empty:
+        df = df.drop_duplicates(subset=['timestamp', 'symbol', 'side', 'value'], keep='first')
+    
     return df
 
 def calculate_stats(df):
