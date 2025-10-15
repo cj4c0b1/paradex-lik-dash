@@ -11,7 +11,7 @@ import time
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
 ASTER_WS_URL = "wss://fstream.asterdex.com/ws"
-# binance wss ASTER_WS_URL = "wss://fstream.binance.com/ws"
+#ASTER_WS_URL = "wss://fstream.binance.com/ws"
 
 # Global storage for liquidations
 liquidations = deque(maxlen=MAX_DATA_POINTS)
