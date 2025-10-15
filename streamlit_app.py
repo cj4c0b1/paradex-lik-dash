@@ -10,6 +10,7 @@ import time
 import sqlite3
 import os
 import random
+import altair as alt
 
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
@@ -290,9 +291,20 @@ def main():
             with chart_placeholder.container():
                 st.subheader("Liquidation Volume by Symbol (Last 100)")
                 chart_data = df.tail(100).groupby('symbol')['value'].sum().sort_values(ascending=False)
+                # Create DataFrame for Altair
+                chart_df = chart_data.reset_index()
+                chart_df.columns = ['Symbol', 'Value']
                 # Generate random colors for each bar
-                colors = [f"#{random.randint(0, 0xFFFFFF):06x}" for _ in range(len(chart_data))]
-                st.bar_chart(chart_data, color=colors)
+                colors = [f"#{random.randint(0, 0xFFFFFF):06x}" for _ in range(len(chart_df))]
+                chart_df['Color'] = colors
+                
+                # Create Altair chart
+                chart = alt.Chart(chart_df).mark_bar().encode(
+                    x='Symbol:O',
+                    y='Value:Q',
+                    color=alt.Color('Color:N', scale=None)
+                )
+                st.altair_chart(chart, use_container_width=True)
         
         # Display latest liquidations
         with table_placeholder.container():

@@ -4,4 +4,4 @@ websockets
 numpy
 requests
 hashlib
-plotly
+altair
