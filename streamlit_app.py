@@ -7,11 +7,87 @@ import websockets
 import hashlib
 from collections import deque
 import time
+import sqlite3
+import os
 
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
 ASTER_WS_URL = "wss://fstream.asterdex.com/ws"
 #ASTER_WS_URL = "wss://fstream.binance.com/ws"
+
+DB_PATH = "liquidations.db"
+
+def init_db():
+    """Initialize SQLite database and create table if not exists"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS liquidations (
+            id TEXT PRIMARY KEY,
+            timestamp TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            side TEXT NOT NULL,
+            price REAL NOT NULL,
+            quantity REAL NOT NULL,
+            value REAL NOT NULL,
+            time TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def load_liquidations_from_db():
+    """Load recent liquidations from database into memory"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    # Load last 1 hour of data or up to MAX_DATA_POINTS
+    one_hour_ago = (datetime.utcnow() - timedelta(hours=1)).isoformat()
+    cursor.execute("""
+        SELECT id, timestamp, symbol, side, price, quantity, value, time
+        FROM liquidations
+        WHERE timestamp >= ?
+        ORDER BY timestamp DESC
+        LIMIT ?
+    """, (one_hour_ago, MAX_DATA_POINTS))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    # Convert to deque and reverse to chronological order
+    data = []
+    for row in reversed(rows):  # Reverse to add oldest first
+        data.append({
+            'id': row[0],
+            'timestamp': pd.Timestamp(row[1]),
+            'symbol': row[2],
+            'side': row[3],
+            'price': row[4],
+            'quantity': row[5],
+            'value': row[6],
+            'time': row[7]
+        })
+    liquidations.extend(data)
+
+def save_liquidation_to_db(liquidation):
+    """Save a single liquidation to database"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT OR REPLACE INTO liquidations (id, timestamp, symbol, side, price, quantity, value, time)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (liquidation['id'], liquidation['timestamp'].isoformat(), liquidation['symbol'],
+          liquidation['side'], liquidation['price'], liquidation['quantity'],
+          liquidation['value'], liquidation['time']))
+    conn.commit()
+    conn.close()
+
+def cleanup_old_liquidations():
+    """Remove liquidations older than 1 hour from database"""
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    one_hour_ago = (datetime.utcnow() - timedelta(hours=1)).isoformat()
+    cursor.execute("DELETE FROM liquidations WHERE timestamp < ?", (one_hour_ago,))
+    conn.commit()
+    conn.close()
 
 # Global storage for liquidations
 liquidations = deque(maxlen=MAX_DATA_POINTS)
@@ -57,6 +133,9 @@ def process_liquidation(data):
         
         # Add to memory
         liquidations.append(liquidation)
+        
+        # Save to database
+        save_liquidation_to_db(liquidation)
         
     except Exception as e:
         print(f"Error processing liquidation: {e}")
@@ -150,6 +229,10 @@ websocket_thread.start()
 
 # Main app
 def main():
+    # Initialize database and load existing data
+    init_db()
+    load_liquidations_from_db()
+    
     # Sidebar with branding
     with st.sidebar:
         st.image("static/logo.svg", width=200)
@@ -176,7 +259,13 @@ def main():
     table_placeholder = st.empty()
 
     # Main loop
+    cleanup_counter = 0
     while True:
+        # Periodic cleanup every 60 iterations (roughly every minute)
+        if cleanup_counter % 60 == 0:
+            cleanup_old_liquidations()
+        cleanup_counter += 1
+        
         # Get latest data
         df = get_latest_liquidations()
         
