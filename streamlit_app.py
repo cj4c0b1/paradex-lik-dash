@@ -224,9 +224,13 @@ def start_websocket():
     loop.run_until_complete(aster_websocket())
 
 # Start websocket in a separate thread
-import threading
 websocket_thread = threading.Thread(target=start_websocket, daemon=True)
 websocket_thread.start()
+
+def get_base64_of_svg(svg_path):
+    """Convert SVG file to base64 for embedding"""
+    with open(svg_path, 'rb') as f:
+        return base64.b64encode(f.read()).decode()
 
 # Main app
 def main():
@@ -236,15 +240,17 @@ def main():
     
     # Sidebar with branding
     with st.sidebar:
-        st.image("static/logo.svg", width=200)
+        logo_path = os.path.join(os.getcwd(), "static", "logo.svg")
+        st.image(logo_path, width=200)
+        github_icon_path = os.path.join(os.getcwd(), "static", "github-icon.svg")
         st.markdown("""
         <div style="text-align: center; margin-bottom: 10px;">
             <a href="https://github.com/cj4c0b1/aster-lik-dash" target="_blank" style="text-decoration: none;">
-                <img src="static/github-icon.svg" alt="GitHub" width="24" style="vertical-align: middle; margin-right: 8px;">
+                <img src="data:image/svg+xml;base64,{}" alt="GitHub" width="24" style="vertical-align: middle; margin-right: 8px;">
                 View on GitHub
             </a>
         </div>
-        """, unsafe_allow_html=True)
+        """.format(get_base64_of_svg(github_icon_path)), unsafe_allow_html=True)
         st.markdown("### Powered by [Asterdex.com](https://www.asterdex.com/en/referral/183633)")
         st.markdown("""
         <div style="background-color: #1E1E1E; padding: 15px; border-radius: 10px; margin-top: 20px;">
