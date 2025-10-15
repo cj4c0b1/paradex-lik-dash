@@ -306,7 +306,7 @@ def main():
         
         # Display latest liquidations
         with table_placeholder.container():
-            st.subheader("Latest Liquidations")
+            st.subheader("Latest Liquidations (UTC time)")
             if not df.empty:
                 # Format the display - sort by timestamp descending for latest first
                 display_df = df.sort_values('timestamp', ascending=False)[['time', 'symbol', 'side', 'quantity', 'price', 'value']].head(20)
