@@ -289,7 +289,7 @@ def main():
         # Display chart if we have data
         if not df.empty:
             with chart_placeholder.container():
-                st.subheader("Liquidation Volume by Symbol (Last 100)")
+                st.subheader("Liquidation Volume by Symbol")
                 chart_data = df.tail(100).groupby('symbol')['value'].sum().sort_values(ascending=False)
                 # Create DataFrame for Altair
                 chart_df = chart_data.reset_index()
@@ -310,8 +310,8 @@ def main():
         with table_placeholder.container():
             st.subheader("Latest Liquidations")
             if not df.empty:
-                # Format the display
-                display_df = df[['time', 'symbol', 'side', 'quantity', 'price', 'value']].tail(20)
+                # Format the display - sort by timestamp descending for latest first
+                display_df = df.sort_values('timestamp', ascending=False)[['time', 'symbol', 'side', 'quantity', 'price', 'value']].head(20)
                 display_df.columns = ['Time', 'Symbol', 'Side', 'Quantity', 'Price', 'Value']
                 display_df['Value'] = display_df['Value'].apply(lambda x: f"${x:,.2f}")
                 display_df['Price'] = display_df['Price'].apply(lambda x: f"${x:,.2f}")
