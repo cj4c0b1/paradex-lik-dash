@@ -235,6 +235,10 @@ def main():
     init_db()
     load_liquidations_from_db()
     
+    # Initialize theme in session state
+    if 'theme' not in st.session_state:
+        st.session_state.theme = 'light'
+    
     # Sidebar with branding
     with st.sidebar:
         st.image("static/logo.svg", width=200)
@@ -251,6 +255,30 @@ def main():
         </div>
         """, unsafe_allow_html=True)
         st.markdown("---")
+        
+        # Theme toggle
+        if st.button(f"{'🌙 Dark' if st.session_state.theme == 'light' else '☀️ Light'} Mode"):
+            st.session_state.theme = 'dark' if st.session_state.theme == 'light' else 'light'
+            st.rerun()
+    
+    # Apply theme CSS
+    if st.session_state.theme == 'dark':
+        st.markdown("""
+        <style>
+        body { background-color: #121212; color: #ffffff; }
+        .stApp { background-color: #121212; }
+        .css-1d391kg { background-color: #1e1e1e; }
+        .stTextInput, .stNumberInput, .stSelectbox { background-color: #2d2d2d; color: #ffffff; }
+        .stDataFrame { background-color: #1e1e1e; color: #ffffff; }
+        </style>
+        """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <style>
+        body { background-color: #ffffff; color: #000000; }
+        .stApp { background-color: #ffffff; }
+        </style>
+        """, unsafe_allow_html=True)
 
     st.title("📊 Real-time Liquidation Dashboard")
     st.markdown("---")
