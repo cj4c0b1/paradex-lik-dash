@@ -344,7 +344,7 @@ def main():
                         return 'color: green'
                     return ''
                 
-                styled_df = display_df.style.applymap(color_side, subset=['Side'])
+                styled_df = display_df.style.map(color_side, subset=['Side'])
                 st.dataframe(styled_df, width='stretch', hide_index=True)
             else:
                 st.info("Waiting for liquidation data...")
