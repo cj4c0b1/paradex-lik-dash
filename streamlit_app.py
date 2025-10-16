@@ -15,7 +15,6 @@ import threading
 # Constants
 MAX_DATA_POINTS = 1000  # Maximum number of liquidations to keep in memory
 ASTER_WS_URL = "wss://fstream.asterdex.com/ws"
-#ASTER_WS_URL = "wss://fstream.binance.com/ws"
 
 DB_PATH = "liquidations.db"
 
@@ -62,9 +61,15 @@ def load_liquidations_from_db():
         SELECT id, timestamp, symbol, side, price, quantity, value, time
         FROM liquidations
         WHERE timestamp >= ?
+        AND rowid IN (
+            SELECT MIN(rowid)
+            FROM liquidations
+            WHERE timestamp >= ?
+            GROUP BY timestamp, symbol, side, value
+        )
         ORDER BY timestamp DESC
         LIMIT ?
-    """, (one_hour_ago, MAX_DATA_POINTS))
+    """, (one_hour_ago, one_hour_ago, MAX_DATA_POINTS))
     rows = cursor.fetchall()
     conn.close()
     
@@ -183,6 +188,10 @@ def get_latest_liquidations():
             df['timestamp'] = df['timestamp'].dt.tz_localize('UTC')
         else:
             df['timestamp'] = df['timestamp'].dt.tz_convert('UTC')
+    
+    # Drop duplicates based on the unique combination of fields
+    if not df.empty:
+        df = df.drop_duplicates(subset=['timestamp', 'symbol', 'side', 'value'], keep='first')
     
     return df
 
