@@ -28,7 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Constants
-PARADEX_WS_URL = "wss://ws.paradex.trade/ws"
+PARADEX_WS_URL = "wss://ws.api.prod.paradex.trade/v1"
 
 # Timeout for WebSocket operations in seconds
 WEBSOCKET_TIMEOUT = 10
@@ -77,7 +77,7 @@ class ParadexWebSocketMonitor:
         return False
     
     async def subscribe(self, channels: List[Dict[str, Any]]) -> None:
-        """Subscribe to WebSocket channels.
+        """Subscribe to WebSocket channels using Paradex JSON-RPC format.
         
         Args:
             channels: List of channel subscription objects
@@ -85,20 +85,31 @@ class ParadexWebSocketMonitor:
         if not self.websocket:
             await self.connect()
             
-        subscribe_msg = {
-            "method": "subscribe",
-            "channels": channels
-        }
-        
-        try:
-            await self.websocket.send(json.dumps(subscribe_msg))
-            # Add to active subscriptions
-            for channel in channels:
+        # Send subscription messages for each channel
+        for i, channel in enumerate(channels):
+            # Build subscription parameters with correct market_symbol format
+            params = {"channel": channel["name"]}
+            if "market_symbol" in channel:
+                params["market_symbol"] = channel["market_symbol"]
+            elif "markets" in channel and channel["markets"]:
+                # Handle legacy markets format
+                params["market_symbol"] = channel["markets"][0]  # Use first market
+            
+            subscribe_msg = {
+                "jsonrpc": "2.0",
+                "method": "subscribe",
+                "params": params,
+                "id": i + 1
+            }
+            
+            try:
+                await self.websocket.send(json.dumps(subscribe_msg))
                 self.active_subscriptions.add(channel['name'])
-            self.console.print(f"📡 Subscribed to channels: {', '.join([c['name'] for c in channels])}")
-        except Exception as e:
-            self.console.print(f"❌ [bold red]Subscription failed: {e}[/]")
-            logger.error(f"Subscription failed: {e}")
+                market_str = f" ({params.get('market_symbol', 'all')})" if 'market_symbol' in params else ""
+                self.console.print(f"📡 Subscribed to channel: {channel['name']}{market_str}")
+            except Exception as e:
+                self.console.print(f"❌ [bold red]Subscription failed for {channel['name']}: {e}[/]")
+                logger.error(f"Subscription failed for {channel['name']}: {e}")
     
     async def unsubscribe(self, channels: List[str]) -> None:
         """Unsubscribe from WebSocket channels.
@@ -109,20 +120,24 @@ class ParadexWebSocketMonitor:
         if not self.websocket:
             return
             
-        unsubscribe_msg = {
-            "method": "unsubscribe",
-            "channels": channels
-        }
-        
-        try:
-            await self.websocket.send(json.dumps(unsubscribe_msg))
-            # Remove from active subscriptions
-            for channel in channels:
+        # Send unsubscribe messages for each channel
+        for i, channel in enumerate(channels):
+            # For unsubscribe, we might not need market_symbol, but let's include it for consistency
+            # In a real implementation, you'd want to track which specific subscriptions to unsubscribe
+            unsubscribe_msg = {
+                "jsonrpc": "2.0",
+                "method": "unsubscribe",
+                "params": {"channel": channel},
+                "id": i + 1
+            }
+            
+            try:
+                await self.websocket.send(json.dumps(unsubscribe_msg))
                 self.active_subscriptions.discard(channel)
-            self.console.print(f"📡 Unsubscribed from channels: {', '.join(channels)}")
-        except Exception as e:
-            self.console.print(f"❌ [bold red]Unsubscription failed: {e}[/]")
-            logger.error(f"Unsubscription failed: {e}")
+                self.console.print(f"📡 Unsubscribed from channel: {channel}")
+            except Exception as e:
+                self.console.print(f"❌ [bold red]Unsubscription failed for {channel}: {e}[/]")
+                logger.error(f"Unsubscription failed for {channel}: {e}")
     
     def format_message(self, message: Dict[str, Any]) -> str:
         """Format WebSocket message for display.
@@ -135,22 +150,31 @@ class ParadexWebSocketMonitor:
         """
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
         
-        # Handle different message types
-        if 'channel' in message:
-            # Market data message
-            channel = message['channel']
-            data = message.get('data', {})
+        # Handle subscription responses (actual market data)
+        if message.get('method') == 'subscription':
+            params = message.get('params', {})
+            channel = params.get('channel', 'unknown')
+            data = params.get('data', {})
             
-            if channel == 'orderbook':
-                return f"[{timestamp}] [yellow]OrderBook[/] {data.get('market', '')} - Bids: {len(data.get('bids', []))}, Asks: {len(data.get('asks', []))}"
-            elif channel == 'trades':
+            if channel == 'trades':
                 return f"[{timestamp}] [green]Trade[/] {data.get('market', '')} - Price: {data.get('price')} {data.get('side', '').upper()} Size: {data.get('size')}"
+            elif channel == 'orderbook':
+                return f"[{timestamp}] [yellow]OrderBook[/] {data.get('market', '')} - Bids: {len(data.get('bids', []))}, Asks: {len(data.get('asks', []))}"
             elif channel == 'ticker':
                 return f"[{timestamp}] [blue]Ticker[/] {data.get('market', '')} - Last: {data.get('last')} 24h Vol: {data.get('volume24h')}"
             else:
                 return f"[{timestamp}] [{channel}] {json.dumps(data, indent=2)}"
         
-        # Default formatting for other message types
+        # Handle error responses
+        elif 'error' in message:
+            error = message.get('error', {})
+            return f"[{timestamp}] [red]Error[/] {error.get('message', 'Unknown error')}"
+        
+        # Handle subscription confirmations
+        elif message.get('method') == 'subscribe' and 'result' in message:
+            return f"[{timestamp}] [green]Subscribed[/] to channel"
+        
+        # Default formatting for other message types (like connection handshake)
         return f"[{timestamp}] {json.dumps(message, indent=2)}"
     
     async def listen(self):
@@ -202,11 +226,9 @@ async def main(test_mode: bool = False):
         await run_test_mode(monitor)
         return
     
-    # Example subscriptions
+    # Example subscriptions for ALL markets
     subscriptions = [
-        {"name": "orderbook", "markets": ["BTC-USD"]},
-        {"name": "trades", "markets": ["BTC-USD"]},
-        {"name": "ticker", "markets": ["BTC-USD"]}
+        {"name": "trades.ALL"}
     ]
     
     try:
