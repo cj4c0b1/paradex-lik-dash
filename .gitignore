@@ -82,3 +82,7 @@ Thumbs.db
 *.csv.bak
 *.xlsx.bak
 data/
+
+# Paradex dashboard specific
+*.db
+logs/
